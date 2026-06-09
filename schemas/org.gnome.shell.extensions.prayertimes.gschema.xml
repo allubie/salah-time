@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.prayertimes" path="/org/gnome/shell/extensions/prayertimes/">
+    <key name="auto-location" type="b">
+      <default>true</default>
+      <summary>Automatic Location</summary>
+      <description>Use system timezone for location.</description>
+    </key>
+    <key name="city" type="s">
+      <default>"Mecca"</default>
+      <summary>City name</summary>
+      <description>The city to fetch prayer times for.</description>
+    </key>
+    <key name="country" type="s">
+      <default>"Saudi Arabia"</default>
+      <summary>Country name</summary>
+      <description>The country of the city.</description>
+    </key>
+    <key name="time-format-12h" type="b">
+      <default>false</default>
+      <summary>Use 12-hour format</summary>
+      <description>Display time in 12-hour (AM/PM) format instead of 24-hour.</description>
+    </key>
+  </schema>
+</schemalist>
