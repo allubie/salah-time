@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.prayertimes" path="/org/gnome/shell/extensions/prayertimes/">
+  <schema id="org.gnome.shell.extensions.salahtimes" path="/org/gnome/shell/extensions/salahtimes/">
     <key name="auto-location" type="b">
       <default>true</default>
       <summary>Automatic Location</summary>

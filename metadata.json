@@ -1,10 +1,10 @@
 {
-  "uuid": "prayer-times@istiaque",
-  "name": "Prayer Times",
-  "description": "Displays Islamic prayer times and countdown using AlAdhan API with offline support.",
+  "uuid": "Salah-times@istiaque",
+  "name": "Salah Times",
+  "description": "Displays Salah times and countdown using AlAdhan API.",
   "shell-version": [
     "50"
   ],
-  "settings-schema": "org.gnome.shell.extensions.prayertimes",
+  "settings-schema": "org.gnome.shell.extensions.salahtimes",
   "url": ""
 }

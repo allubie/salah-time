@@ -43,25 +43,25 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
         });
         group.add(autoLocationRow);
 
-        // Get current saved values
+        // get current saved values
         let currentCountry = settings.get_string('country');
         let currentCity = settings.get_string('city');
 
-        // Ensure current country exists in our list, fallback to first if not
+        // ensure current country exists in our list, fallback to first if not
         const countries = Object.keys(LOCATIONS).sort();
         if (!countries.includes(currentCountry)) {
             currentCountry = countries[0];
             settings.set_string('country', currentCountry);
         }
 
-        // Country ComboRow
+        // country comborow
         const countryModel = Gtk.StringList.new(countries);
         const countryRow = new Adw.ComboRow({
             title: _('Country'),
             model: countryModel,
         });
         
-        // Find index of current country
+        // find index of current country
         let countryIndex = countries.indexOf(currentCountry);
         if (countryIndex !== -1) {
             countryRow.set_selected(countryIndex);
@@ -69,13 +69,13 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
 
         group.add(countryRow);
 
-        // City ComboRow
+        // city comborow
         const cityRow = new Adw.ComboRow({
             title: _('City'),
         });
         group.add(cityRow);
 
-        // Bind auto-location to disable manual selection
+        // bind auto-location to disable manual selection
         settings.bind('auto-location', autoLocationRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         
         const updateSensitivity = () => {
@@ -86,7 +86,7 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
         autoLocationRow.connect('notify::active', updateSensitivity);
         updateSensitivity(); // Initial state
 
-        // Function to update City model based on selected Country
+        // function to update City model based on selected Country
         const updateCityModel = (country) => {
             let cities = LOCATIONS[country] || [];
             cities = [...cities].sort(); // Create copy and sort
@@ -94,7 +94,7 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
             const cityModel = Gtk.StringList.new(cities);
             cityRow.set_model(cityModel);
 
-            // Try to restore saved city or default to first
+            // try to restore saved city or default to first
             let savedCity = settings.get_string('city');
             let idx = cities.indexOf(savedCity);
             if (idx === -1) {
@@ -106,10 +106,10 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
             cityRow.set_selected(idx);
         };
 
-        // Initialize City Model
+        // initialize City Model
         updateCityModel(currentCountry);
 
-        // Listen for Country changes
+        // listen for country changes
         countryRow.connect('notify::selected-item', () => {
             let selectedItem = countryRow.get_selected_item();
             if (selectedItem) {
@@ -119,7 +119,7 @@ export default class PrayerTimesPreferences extends ExtensionPreferences {
             }
         });
 
-        // Listen for City changes
+        // listen for city changes
         cityRow.connect('notify::selected-item', () => {
             let selectedItem = cityRow.get_selected_item();
             if (selectedItem) {

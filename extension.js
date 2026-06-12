@@ -9,18 +9,18 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const PRAYERS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+const SALAHS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 const ICONS = {
     Fajr: 'weather-clear-night-symbolic',
-    Sunrise: 'weather-clear-symbolic',
+    Sunrise: 'daytime-sunrise-symbolic',
     Dhuhr: 'weather-clear-symbolic',
     Asr: 'weather-few-clouds-symbolic',
-    Maghrib: 'weather-clear-night-symbolic',
-    Isha: 'weather-clear-night-symbolic',
+    Maghrib: 'daytime-sunset-symbolic',
+    Isha: 'night-light-symbolic',
 };
 
-export default class PrayerTimesExtension extends Extension {
+export default class SalahTimeExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
         this._cancellable = new Gio.Cancellable();
@@ -28,10 +28,10 @@ export default class PrayerTimesExtension extends Extension {
         this._currentMonth = -1;
         this._currentYear = -1;
         
-        // Setup top bar button
+        // top bar button setup
         this._indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
         
-        // Layout: Waqt + Countdown
+        // layout
         let box = new St.BoxLayout();
         
         this._waqtLabel = new St.Label({
@@ -48,7 +48,7 @@ export default class PrayerTimesExtension extends Extension {
         box.add_child(this._countdownLabel);
         this._indicator.add_child(box);
         
-        // Location menu item opens preferences
+        // location preferences
         this._locationItem = new PopupMenu.PopupMenuItem('...');
         this._locationItem.label.get_clutter_text().set_use_markup(true);
         this._locationItem.connect('activate', () => {
@@ -58,19 +58,19 @@ export default class PrayerTimesExtension extends Extension {
         
         this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        // Setup dropdown prayer list
-        this._prayerItems = {};
-        for (let prayer of PRAYERS) {
+        // dropdown list
+        this._waqtItems = {};
+        for (let waqt of SALAHS) {
             let item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
             
             let iconActor = new St.Icon({
-                icon_name: ICONS[prayer],
+                icon_name: ICONS[waqt],
                 style_class: 'popup-menu-icon'
             });
             item.add_child(iconActor);
 
             let nameLabel = new St.Label({
-                text: prayer,
+                text: waqt,
                 x_expand: true,
                 y_align: Clutter.ActorAlign.CENTER,
                 style: 'margin-left: 10px; margin-right: 10px;'
@@ -85,7 +85,7 @@ export default class PrayerTimesExtension extends Extension {
             timeLabel.get_clutter_text().set_use_markup(true);
             item.add_child(timeLabel);
 
-            this._prayerItems[prayer] = { item, nameLabel, timeLabel };
+            this._waqtItems[waqt] = { item, nameLabel, timeLabel };
             this._indicator.menu.addMenuItem(item);
         }
 
@@ -94,7 +94,7 @@ export default class PrayerTimesExtension extends Extension {
         this._httpSession = new Soup.Session();
         this._updateData();
 
-        // Refresh data on location change, redraw menu on format change
+        // data refresh on location change
         this._settingsChangedId = this._settings.connect('changed', (settings, key) => {
             if (key === 'time-format-12h') {
                 this._updateMenu();
@@ -103,7 +103,7 @@ export default class PrayerTimesExtension extends Extension {
             }
         });
 
-        // 1-minute tick to update countdown and handle day changes
+        // update countdown, day changes
         this._timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
             this._checkDayRollover();
             this._updateCountdown();
@@ -142,10 +142,10 @@ export default class PrayerTimesExtension extends Extension {
         const year = date.getFullYear();
 
         if (month !== this._currentMonth || year !== this._currentYear) {
-            this._updateData(); // New month, fetch API
+            this._updateData(); // new month use api
         } else if (dayIndex !== this._currentDayIndex) {
              if (this._monthlyData) {
-                 this._parseData(this._monthlyData); // New day, use cache
+                 this._parseData(this._monthlyData); // new day use cache
              }
         }
     }
@@ -189,7 +189,7 @@ export default class PrayerTimesExtension extends Extension {
                 try {
                     cacheFile.replace_contents(bytes.toArray(), null, false, Gio.FileCreateFlags.NONE, null);
                 } catch (e) {
-                    console.warn(`[PrayerTimes] Cache write failed: ${e.message}`);
+                    console.warn(`[WaqtTimes] Cache write failed: ${e.message}`);
                 }
                 
                 let text = new TextDecoder('utf-8').decode(bytes.toArray());
@@ -200,7 +200,7 @@ export default class PrayerTimesExtension extends Extension {
             }
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                console.warn(`[PrayerTimes] API fetch failed, using cache: ${e.message}`);
+                console.warn(`[WaqtTimes] API fetch failed, using cache: ${e.message}`);
             } else {
                 return;
             }
@@ -217,7 +217,7 @@ export default class PrayerTimesExtension extends Extension {
                 }
             }
         } catch (e) {
-            console.error(`[PrayerTimes] Cache read failed: ${e.message}`);
+            console.error(`[WaqtTimes] Cache read failed: ${e.message}`);
         }
     }
 
@@ -234,9 +234,9 @@ export default class PrayerTimesExtension extends Extension {
             let todayData = data.data[this._currentDayIndex];
             this._timings = Object.assign({}, todayData.timings);
             
-            // Strip timezone offsets
-            for (let prayer in this._timings) {
-                this._timings[prayer] = this._timings[prayer].split(' ')[0];
+            // strip timezone offsets
+            for (let waqt in this._timings) {
+                this._timings[waqt] = this._timings[waqt].split(' ')[0];
             }
             
             this._updateMenu();
@@ -260,44 +260,44 @@ export default class PrayerTimesExtension extends Extension {
     _updateMenu() {
         if (!this._timings || !this._indicator) return;
         
-        let currentPrayer = this._getCurrentPrayer();
+        let currentWaqt= this._getCurrentWaqt();
         
-        for (let prayer of PRAYERS) {
-            if (this._timings[prayer]) {
-                let timeFmt = this._formatTime(this._timings[prayer]);
-                let nameTxt = prayer;
+        for (let waqt of SALAHS) {
+            if (this._timings[waqt]) {
+                let timeFmt = this._formatTime(this._timings[waqt]);
+                let nameTxt = waqt;
                 
-                if (prayer === currentPrayer) {
-                    nameTxt = `<b>${prayer}</b>`;
+                if (waqt === currentWaqt) {
+                    nameTxt = `<b>${waqt}</b>`;
                     timeFmt = `<b>${timeFmt}</b>`;
                 }
                 
-                this._prayerItems[prayer].nameLabel.get_clutter_text().set_markup(nameTxt);
-                this._prayerItems[prayer].timeLabel.get_clutter_text().set_markup(timeFmt);
+                this._waqtItems[waqt].nameLabel.get_clutter_text().set_markup(nameTxt);
+                this._waqtItems[waqt].timeLabel.get_clutter_text().set_markup(timeFmt);
             }
         }
     }
 
-    _getCurrentPrayer() {
+    _getCurrentWaqt() {
         if (!this._timings) return null;
         let now = new Date();
-        let currentPrayer = 'Isha';
+        let currentWaqt= 'Isha';
 
-        for (let i = 0; i < PRAYERS.length; i++) {
-            let prayer = PRAYERS[i];
-            let timeStr = this._timings[prayer];
+        for (let i = 0; i < SALAHS.length; i++) {
+            let waqt = SALAHS[i];
+            let timeStr = this._timings[waqt];
             if (!timeStr) continue;
             
             let [hours, minutes] = timeStr.split(':').map(Number);
-            let prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            let waqtDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
             
-            if (prayerDate > now) {
-                currentPrayer = i > 0 ? PRAYERS[i - 1] : 'Isha';
+            if (waqtDate > now) {
+                currentWaqt= i > 0 ? SALAHS[i - 1] : 'Isha';
                 break;
             }
         }
         
-        return currentPrayer;
+        return currentWaqt;
     }
 
     _updateCountdown() {
@@ -309,40 +309,40 @@ export default class PrayerTimesExtension extends Extension {
         }
 
         let now = new Date();
-        let nextPrayer = null;
-        let nextPrayerTime = null;
+        let nextWaqt = null;
+        let nextWaqtTime = null;
 
-        for (let prayer of PRAYERS) {
-            let timeStr = this._timings[prayer];
+        for (let waqt of SALAHS) {
+            let timeStr = this._timings[waqt];
             if (!timeStr) continue;
             
             let [hours, minutes] = timeStr.split(':').map(Number);
-            let prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            let waqtDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
             
-            if (prayerDate > now) {
-                nextPrayer = prayer;
-                nextPrayerTime = prayerDate;
+            if (waqtDate > now) {
+                nextWaqt = waqt;
+                nextWaqtTime = waqtDate;
                 break;
             }
         }
 
-        // If today's prayers are over, next is tomorrow's Fajr
-        if (!nextPrayer && this._timings['Fajr']) {
-            nextPrayer = 'Fajr';
+        // if today's salah are over, next is tomorrow's Fajr
+        if (!nextWaqt && this._timings['Fajr']) {
+            nextWaqt = 'Fajr';
             let [hours, minutes] = this._timings['Fajr'].split(':').map(Number);
-            nextPrayerTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hours, minutes, 0);
+            nextWaqtTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hours, minutes, 0);
         }
 
-        if (nextPrayerTime) {
-            let diffMs = nextPrayerTime - now;
+        if (nextWaqtTime) {
+            let diffMs = nextWaqtTime - now;
             let diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
             let diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
             
             let hrStr = diffHrs > 0 ? `${diffHrs}h ` : '';
             
-            let currentPrayer = this._getCurrentPrayer();
+            let currentWaqt= this._getCurrentWaqt();
             
-            this._waqtLabel.text = currentPrayer ? currentPrayer : '';
+            this._waqtLabel.text = currentWaqt? currentWaqt: '';
             this._countdownLabel.text = `${hrStr}${diffMins}m Left`;
         }
 
